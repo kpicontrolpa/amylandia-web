@@ -50,12 +50,14 @@ jobs:
           dotnet restore "$CSPROJ"
           dotnet publish "$CSPROJ" -c Release -o ./published
 
-          # Asegura que el staticwebapp.config.json quede en el artefacto publicado
-          if [ -f "./staticwebapp.config.json" ]; then
-            cp "./staticwebapp.config.json" "./published/wwwroot/staticwebapp.config.json"
-          fi
+          # El paso de publish genera todo dentro de published/wwwroot para Blazor WASM
+          # Aseguramos que el staticwebapp.config.json esté justo allí
           if [ -f "$PROJECT_DIR/wwwroot/staticwebapp.config.json" ]; then
-            cp "$PROJECT_DIR/wwwroot/staticwebapp.config.json" "./published/wwwroot/staticwebapp.config.json"
+            echo "Copiando staticwebapp.config.json desde $PROJECT_DIR/wwwroot a published/wwwroot"
+            cp "$PROJECT_DIR/wwwroot/staticwebapp.config.json" "./published/wwwroot/"
+          elif [ -f "./staticwebapp.config.json" ]; then
+            echo "Copiando staticwebapp.config.json desde raíz a published/wwwroot"
+            cp "./staticwebapp.config.json" "./published/wwwroot/"
           fi
 
           echo "Contenido publicado:"
