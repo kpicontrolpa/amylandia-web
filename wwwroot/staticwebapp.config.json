@@ -50,5 +50,12 @@
             "rewrite": "/403.html",
             "statusCode": 403
         }
+    },
+    "navigationFallback": {
+        "rewrite": "/index.html",
+        "exclude": [
+            "/images/*.{png,jpg,gif}",
+            "/css/*"
+        ]
     }
 }
