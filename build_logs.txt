@@ -1,0 +1,13 @@
+  Determinando los proyectos que se van a restaurar...
+  Todos los proyectos están actualizados para la restauración.
+C:\Users\orion\OneDrive - Daravina\Documents\000_Desarrollos\00_Produccion\100_Amylandia\AmylandiaWeb\Pages\Home.razor(3,13): error CS0246: El nombre del tipo o del espacio de nombres 'AuthorizeAttribute' no se encontró (¿falta una directiva using o una referencia de ensamblado?) [C:\Users\orion\OneDrive - Daravina\Documents\000_Desarrollos\00_Produccion\100_Amylandia\AmylandiaWeb\AmylandiaWeb.csproj]
+C:\Users\orion\OneDrive - Daravina\Documents\000_Desarrollos\00_Produccion\100_Amylandia\AmylandiaWeb\Pages\Home.razor(3,13): error CS0246: El nombre del tipo o del espacio de nombres 'Authorize' no se encontró (¿falta una directiva using o una referencia de ensamblado?) [C:\Users\orion\OneDrive - Daravina\Documents\000_Desarrollos\00_Produccion\100_Amylandia\AmylandiaWeb\AmylandiaWeb.csproj]
+
+ERROR al compilar.
+
+C:\Users\orion\OneDrive - Daravina\Documents\000_Desarrollos\00_Produccion\100_Amylandia\AmylandiaWeb\Pages\Home.razor(3,13): error CS0246: El nombre del tipo o del espacio de nombres 'AuthorizeAttribute' no se encontró (¿falta una directiva using o una referencia de ensamblado?) [C:\Users\orion\OneDrive - Daravina\Documents\000_Desarrollos\00_Produccion\100_Amylandia\AmylandiaWeb\AmylandiaWeb.csproj]
+C:\Users\orion\OneDrive - Daravina\Documents\000_Desarrollos\00_Produccion\100_Amylandia\AmylandiaWeb\Pages\Home.razor(3,13): error CS0246: El nombre del tipo o del espacio de nombres 'Authorize' no se encontró (¿falta una directiva using o una referencia de ensamblado?) [C:\Users\orion\OneDrive - Daravina\Documents\000_Desarrollos\00_Produccion\100_Amylandia\AmylandiaWeb\AmylandiaWeb.csproj]
+    0 Advertencia(s)
+    2 Errores
+
+Tiempo transcurrido 00:00:01.31

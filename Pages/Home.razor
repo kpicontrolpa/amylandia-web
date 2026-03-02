@@ -1,0 +1,693 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+
+<PageTitle>Amylandia - Recepción</PageTitle>
+
+@inject GraphSharePointService SharePointService
+@inject NavigationManager NavigationManager
+
+<div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+    <div>
+        <div class="d-flex align-items-center gap-3 mb-2">
+             <img src="images/Logo.png" alt="Amylandia" style="height: 60px; object-fit: contain;" />
+             <h3 class="fw-bold mb-0" style="color: var(--amy-primary)">@(editId.HasValue ? $"Editando Ingreso #{editId.Value}" : "Ingreso a Parque")</h3>
+        </div>
+        <span class="text-muted"><small><i class="bi bi-person-badge me-1"></i>Operador: <strong>@NombreOperador</strong></small></span>
+    </div>
+    <div class="text-end">
+        <h3 class="fw-bold mb-0" style="color: var(--amy-primary)">@DateTime.Now.ToString("HH:mm:ss")</h3>
+        <span class="badge bg-secondary">Turno: @DateTime.Now.ToString("dd MMM yyyy")</span>
+    </div>
+</div>
+
+<EditForm Model="this" OnValidSubmit="SubmitRegistration" class="pe-md-4">
+    <!-- Cliente -->
+    <div class="mb-4">
+        <label class="form-label fw-bold">Cliente (Buscar por Nombre o Código VIP)</label>
+        <div class="input-group input-group-lg shadow-sm">
+            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-person-lines-fill"></i> Catálogo VIP
+            </button>
+            <ul class="dropdown-menu p-2 shadow" style="min-width: 300px;">
+                @if (ClientesVIP != null && ClientesVIP.Any())
+                {
+                    @foreach (var cliente in ClientesVIP)
+                    {
+                        <li>
+                            <a class="dropdown-item rounded mb-1" href="#" @onclick='() => CargarFrecuente(cliente.Title ?? "", cliente.Nombre ?? "", cliente.Genero ?? "", cliente.Edad, cliente.MesCumpleanios ?? "", cliente.Id)' @onclick:preventDefault>
+                                <span class="badge bg-secondary me-2">@cliente.Title</span> @cliente.Nombre
+                            </a>
+                        </li>
+                    }
+                }
+                else
+                {
+                    <li class="p-2 text-muted small">Cargando catálogo o sin datos...</li>
+                }
+            </ul>
+            <InputText class="form-control" placeholder="Ejemplo: VIP-001 o texto..." @bind-Value="BusquedaCliente" />
+            <button class="btn btn-primary px-4" type="button" @onclick="BuscarPorCodigo"><i class="bi bi-search"></i> Buscar</button>
+        </div>
+        @if (!string.IsNullOrEmpty(NombreCliente) && ClienteVIPSeleccionado)
+        {
+            <div class="form-text text-success fw-bold mt-2"><i class="bi bi-check-circle-fill me-1"></i> Cliente VIP: @NombreCliente</div>
+        }
+    </div>
+
+    <!-- Demográficos -->
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label fw-bold">Género</label>
+            <InputSelect class="form-select" @bind-Value="Genero" disabled="@ClienteVIPSeleccionado">
+                <option value="">Selecc...</option>
+                <option value="Masculino">Masculino</option>
+                <option value="Femenino">Femenino</option>
+            </InputSelect>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-bold">Edad</label>
+            <input class="form-control" 
+                   type="number"
+                   @bind="Edad" 
+                   @onblur="FormatearEdad"
+                   min="0" 
+                   max="99"
+                   disabled="@ClienteVIPSeleccionado" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-bold">Mes Cumpleaños</label>
+            <InputSelect class="form-select" @bind-Value="MesCumpleanios" disabled="@ClienteVIPSeleccionado">
+                <option value="">Seleccionar...</option>
+                <option value="Enero">Enero</option>
+                <option value="Febrero">Febrero</option>
+                <option value="Marzo">Marzo</option>
+                <option value="Abril">Abril</option>
+                <option value="Mayo">Mayo</option>
+                <option value="Junio">Junio</option>
+                <option value="Julio">Julio</option>
+                <option value="Agosto">Agosto</option>
+                <option value="Septiembre">Septiembre</option>
+                <option value="Octubre">Octubre</option>
+                <option value="Noviembre">Noviembre</option>
+                <option value="Diciembre">Diciembre</option>
+            </InputSelect>
+        </div>
+    </div>
+
+    <!-- Fecha y Hora de Ingreso Manual (Basado en referencia visual) -->
+    <div class="row mb-3 align-items-end">
+        <div class="col-12 col-md-6 mb-2 mb-md-0">
+             <label class="form-label fw-bold">Fecha de Ingreso</label>
+             <InputDate class="form-control text-end" @bind-Value="FechaIngreso" />
+        </div>
+        <div class="col-6 col-md-3">
+             <label class="form-label fw-bold">Hora</label>
+             <InputSelect class="form-select" @bind-Value="HoraIngreso">
+                 @for(int i = 0; i <= 23; i++) {
+                     <option value="@i.ToString("00")">@i.ToString("00")</option>
+                 }
+             </InputSelect>
+        </div>
+        <div class="col-6 col-md-3">
+             <label class="form-label fw-bold">Minuto</label>
+             <InputSelect class="form-select" @bind-Value="MinutoIngreso">
+                 @for(int i = 0; i < 60; i+=5) {
+                     <option value="@i.ToString("00")">@i.ToString("00")</option>
+                 }
+             </InputSelect>
+        </div>
+    </div>
+
+    <!-- Paquete -->
+    <div class="row mb-3 align-items-end">
+        <div class="col-7">
+            <label class="form-label fw-bold">Paquete Seleccionado</label>
+            <InputSelect class="form-select form-select-lg" @bind-Value="PaqueteId" @bind-Value:after="RecalcularTotales">
+                <option value="0">Seleccionar...</option>
+                @if (PaquetesDisponibles != null && PaquetesDisponibles.Any())
+                {
+                    @foreach (var paquete in PaquetesDisponibles)
+                    {
+                        <option value="@paquete.Id">@paquete.Nombre ($@paquete.Precio.ToString("F2"))</option>
+                    }
+                }
+                else
+                {
+                    <option value="0" disabled>Cargando paquetes...</option>
+                }
+            </InputSelect>
+        </div>
+        <div class="col-5">
+            <div class="form-check form-switch fs-5 pb-2">
+                <InputCheckbox class="form-check-input" id="duplicaCheck" @bind-Value="DuplicaTiempo" />
+                <label class="form-check-label fw-bold" for="duplicaCheck"> Duplica</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12 col-md-6 mb-3 mb-md-0">
+             <label class="form-label fw-bold">% Descuento</label>
+             <InputSelect class="form-select" @bind-Value="Descuento" @bind-Value:after="RecalcularTotales">
+                <option value="0">0%</option>
+                <option value="10">10%</option>
+                <option value="20">20%</option>
+            </InputSelect>
+        </div>
+        <div class="col-12 col-md-6">
+             <!-- Bloque Financiero Delineado -->
+             <div class="card-highlight shadow-sm p-3 text-start">
+                 <div class="text-center text-muted fw-bold mb-2">A COBRAR ($ PAGO)</div>
+                 <div class="d-flex justify-content-between small text-muted border-bottom mb-1 pb-1">
+                     <span>Subtotal:</span><span>$ @Subtotal.ToString("F2")</span>
+                 </div>
+                 @if(DescuentoMonto > 0)
+                 {
+                 <div class="d-flex justify-content-between small text-danger border-bottom mb-1 pb-1">
+                     <span>Descuento (@Descuento%):</span><span>-$ @DescuentoMonto.ToString("F2")</span>
+                 </div>
+                 }
+                 <div class="d-flex justify-content-between small text-muted border-bottom mb-2 pb-1">
+                     <span>ITBMS (@PorcentajeItbms.ToString("0.##")%):</span><span>$ @ImpuestoItbmsCalculado.ToString("F2")</span>
+                 </div>
+                 <div class="d-flex justify-content-between align-items-center">
+                     <span class="fw-bold fs-5">TOTAL:</span><h2 class="m-0 text-success fw-bold">$ @TotalPagar.ToString("F2")</h2>
+                 </div>
+             </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-bold text-danger">* Método de Pago</label>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-lg flex-fill @(MetodoPago == "Efectivo" ? "btn-primary" : "btn-outline-secondary")" @onclick='() => MetodoPago = "Efectivo"'>
+                <i class="bi bi-cash"></i> Efectivo
+            </button>
+            <button type="button" class="btn btn-lg flex-fill @(MetodoPago == "Yappy" ? "btn-primary" : "btn-outline-secondary")" @onclick='() => MetodoPago = "Yappy"'>
+                <i class="bi bi-phone"></i> Yappy
+            </button>
+            <button type="button" class="btn btn-lg flex-fill @(MetodoPago == "Punto de Venta" ? "btn-primary" : "btn-outline-secondary")" @onclick='() => MetodoPago = "Tarjeta"'>
+                <i class="bi bi-credit-card"></i> Tarjeta
+            </button>
+        </div>
+        <!-- Hidden input to maintain form binding -->
+        <InputText @bind-Value="MetodoPago" style="display:none" />
+    </div>
+
+    <!-- Barra de Herramientas de Acción -->
+    <div class="d-flex flex-wrap gap-3 mt-4 pt-3 border-top justify-content-center justify-content-md-end">
+        <button type="button" class="btn btn-outline-secondary px-4 bg-white shadow-sm" style="border-radius: 6px;">
+            <i class="bi bi-house me-1"></i> Ir a Menú
+        </button>
+        <button type="button" class="btn btn-outline-info px-4 bg-white shadow-sm" style="border-radius: 6px;">
+            <i class="bi bi-search me-1"></i> Consulta
+        </button>
+        <button type="button" class="btn btn-outline-warning px-4 bg-white shadow-sm" style="border-radius: 6px;">
+            <i class="bi bi-x-circle me-1"></i> Cancelar
+        </button>
+        <button type="button" class="btn btn-outline-danger px-4 bg-white shadow-sm" style="border-radius: 6px;">
+            <i class="bi bi-trash me-1"></i> Eliminar
+        </button>
+        <button type="submit" class="btn px-4 shadow-sm text-white fw-bold" style="background-color: var(--amy-primary); border-radius: 6px; font-size: 1.1rem;">
+            <i class="bi @(editId.HasValue ? "bi-pencil-square" : "bi-check-circle") me-1"></i> @(editId.HasValue ? "Actualizar Registro" : "Registrar")
+        </button>
+
+    </div>
+</EditForm>
+
+@if (IsLoading)
+{
+    <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75" style="z-index: 9999;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(ResultMessage))
+{
+    <div class="alert alert-info mt-3 shadow-sm mx-md-4">
+        <i class="bi bi-info-circle me-2"></i> @ResultMessage
+    </div>
+}
+
+<div id="amy-footer-kpis" class="row align-items-stretch mt-4 mb-5 px-md-4 pb-5">
+    <div class="col-md-4 mb-3 mb-md-0 d-flex flex-column">
+        @if(DatosDashboard != null && DatosDashboard.Any())
+        {
+            <div class="kpi-banner-danger mb-3 flex-shrink-0" style="background-color: #CAB1FE; color: #4C1D95; border: 1px solid #4C1D95;">
+                <span><i class="bi bi-people-fill me-2"></i> Niños en el Día</span>
+                <div class="badge-circle" style="background-color: #4C1D95; color: white;">@DatosDashboard.Sum(d => d.CantidadNinos)</div>
+            </div>
+        }
+        <div class="income-summary-card flex-grow-1">
+            <h6>Ingresos del Día</h6>
+            <div class="income-row">
+                <span>Efectivo:</span>
+                <strong>$@ResumenDiario.Efectivo.ToString("F2")</strong>
+            </div>
+            <div class="income-row">
+                <span>Yappy:</span>
+                <strong>$@ResumenDiario.Yappy.ToString("F2")</strong>
+            </div>
+            <div class="income-row border-bottom pb-2 mb-1">
+                <span>Tarjeta:</span>
+                <strong>$@ResumenDiario.Tarjeta.ToString("F2")</strong>
+            </div>
+            <div class="income-row total">
+                <span class="fs-5">Total del Día:</span>
+                <strong class="fs-5">$@ResumenDiario.Total.ToString("F2")</strong>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8 d-flex flex-column">
+        <!-- Gráfico de Comportamiento Diario -->
+        <div class="card shadow-sm border-0 flex-grow-1" style="border-radius: 12px; overflow: hidden;">
+            <div class="card-body p-3">
+                <h6 class="fw-bold mb-3 text-muted"><i class="bi bi-graph-up text-primary me-2"></i>Comportamiento y Recaudo por Hora</h6>
+                @if (IsLoadingChart)
+                {
+                    <div class="text-center text-muted my-5"><div class="spinner-border spinner-border-sm me-2"></div> Cargando gráfica...</div>
+                }
+                else if (DatosDashboard != null && DatosDashboard.Any())
+                {
+                    <ApexChart TItem="ComportamientoPorHora" Title="" Options="chartOptions" Height="280">
+                        <ApexPointSeries TItem="ComportamientoPorHora"
+                                         Items="DatosDashboard"
+                                         Name="Niños"
+                                         SeriesType="SeriesType.Bar"
+                                         XValue="@(e => e.HoraString)"
+                                         YValue="@(e => e.CantidadNinos)"
+                                         Color="#CAB1FE" />
+
+                        <ApexPointSeries TItem="ComportamientoPorHora"
+                                         Items="DatosDashboard"
+                                         Name="Ingresos ($)"
+                                         SeriesType="SeriesType.Area"
+                                         XValue="@(e => e.HoraString)"
+                                         YValue="@(e => (decimal)e.TotalIngresos)"
+                                         Color="#6B21A8" />
+                    </ApexChart>
+                    <div class="d-flex justify-content-center gap-4 mt-3 pt-3 border-top pb-1">
+                        <div class="text-center">
+                            <span class="text-muted small fw-bold text-uppercase d-block mb-1">Total Niños</span>
+                            <span class="badge" style="background-color: #CAB1FE; color: #4C1D95; font-size: 1rem;">
+                                @DatosDashboard.Sum(d => d.CantidadNinos)
+                            </span>
+                        </div>
+                        <div class="text-center">
+                            <span class="text-muted small fw-bold text-uppercase d-block mb-1">Total Ingresos</span>
+                            <span class="badge" style="background-color: #6B21A8; color: white; font-size: 1rem;">
+                                $@DatosDashboard.Sum(d => d.TotalIngresos).ToString("F2")
+                            </span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center text-muted my-5"><i class="bi bi-inbox fs-3 d-block mb-2"></i> Sin flujo registrado hoy.</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int? editId { get; set; }
+
+    public string NombreOperador { get; set; } = "Ana Martínez";
+    public int VencidosCount { get; set; } = 2; // Simulado según referencia visual anterior
+    public string BusquedaCliente { get; set; } = "";
+    public string NombreCliente { get; set; } = "";
+    public string Genero { get; set; } = "";
+    public string Edad { get; set; } = "";
+    public string MesCumpleanios { get; set; } = "";
+    
+    // Variables de control de Tiempos
+    public DateTime FechaIngreso { get; set; } = DateTime.Today;
+    public string HoraIngreso { get; set; } = DateTime.Now.ToString("HH");
+    public string MinutoIngreso { get; set; } = (Math.Round(DateTime.Now.Minute / 5.0) * 5).ToString("00");
+
+    public int PaqueteId { get; set; }
+    public bool DuplicaTiempo { get; set; } // Lo dejaremos string para enviar "Si" o "No" después
+    public string Descuento { get; set; } = "0"; // SP es tipo choice string
+    public string MetodoPago { get; set; } = "";
+
+    // Variables Financieras
+    public double Subtotal { get; set; } = 0.00;
+    public double ImpuestoItbmsCalculado { get; set; } = 0.00;
+    public double TotalPagar { get; set; } = 0.00;
+    public double PorcentajeItbms { get; set; } = 0.0; // Default a 0% si la lista está vacía
+    public double DescuentoMonto { get; set; } = 0.00;
+    
+    // Sumatorias Finales Diarias
+    public SharePointResumenDiario ResumenDiario { get; set; } = new();
+
+    // Estado del Gráfico
+    private List<ComportamientoPorHora> DatosDashboard = new();
+    private ApexChartOptions<ComportamientoPorHora> chartOptions = new();
+    private bool IsLoadingChart = false;
+
+    // Estado de autenticación y SP
+    private bool IsLoading = false;
+    private string ResultMessage = "";
+    private int? CurrentClientId;
+    private bool ClienteVIPSeleccionado = false;
+    private List<SharePointClient> ClientesVIP = new();
+    private List<SharePointPaquete> PaquetesDisponibles = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            IsLoading = true;
+
+            // Cargar listas desde SharePoint en paralelo
+            var tareaClientes = SharePointService.GetClientesAsync();
+            var tareaPaquetes = SharePointService.GetPaquetesAsync();
+            var tareaImpuestos = SharePointService.GetITBMSAsync();
+            var tareaResumen = SharePointService.GetResumenDiarioAsync(DateTime.Today);
+            var tareaGrafico = SharePointService.ObtenerDatosComportamiento(DateTime.Today);
+
+            await Task.WhenAll(tareaClientes, tareaPaquetes, tareaImpuestos, tareaResumen, tareaGrafico);
+
+            ClientesVIP = await tareaClientes;
+            PaquetesDisponibles = await tareaPaquetes;
+            ResumenDiario = await tareaResumen;
+            DatosDashboard = await tareaGrafico;
+            
+            ConfigurarGrafico();
+            
+            var impuestoSP = await tareaImpuestos;
+            if(impuestoSP != null)
+            {
+                PorcentajeItbms = impuestoSP.Impuesto;
+            }
+            else 
+            {
+                PorcentajeItbms = 0.0;
+            }
+            
+            if (editId.HasValue)
+            {
+                await LoadEditData(editId.Value);
+            }
+            else
+            {
+                RecalcularTotales(); // Forzar recalculación con el valor base o descargado
+            }
+        }
+        catch (Exception ex)
+        {
+            ResultMessage = "Error al cargar datos: " + ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task LoadEditData(int id)
+    {
+        var record = await SharePointService.GetIngresoByIdAsync(id);
+        if (record != null)
+        {
+            NombreCliente = record.Title ?? "";
+            BusquedaCliente = record.Title ?? "";
+            CurrentClientId = record.ClienteId;
+            ClienteVIPSeleccionado = CurrentClientId.HasValue;
+            
+            PaqueteId = record.PaqueteId;
+            
+            var horaLocal = record.Dato_Ingreso;
+            FechaIngreso = horaLocal;
+            HoraIngreso = horaLocal.ToString("HH");
+            MinutoIngreso = horaLocal.ToString("mm");
+            
+            MetodoPago = record.Modo_Pago ?? "";
+            DuplicaTiempo = record.Duplica == "Si";
+            Descuento = record.Descuento ?? "0";
+            Genero = record.Genero ?? "";
+            Edad = record.Edad ?? "00";
+            MesCumpleanios = record.Mes_Cumpleanios ?? "";
+            
+            RecalcularTotales();
+            StateHasChanged(); // Forzar refresco visual tras la inyección manual
+        }
+        else
+        {
+            ResultMessage = "No se pudo cargar el registro para edición.";
+        }
+    }
+
+    private async Task SubmitRegistration()
+    {
+        if (string.IsNullOrEmpty(MetodoPago))
+        {
+            ResultMessage = "Por favor seleccione un método de pago.";
+            return;
+        }
+
+        if (PaqueteId <= 0)
+        {
+            ResultMessage = "Por favor seleccione un paquete.";
+            return;
+        }
+
+        IsLoading = true;
+        ResultMessage = "";
+
+        try
+        {
+            var horaInt = int.Parse(HoraIngreso);
+            var minutoInt = int.Parse(MinutoIngreso);
+            var fechaCompleta = new DateTime(FechaIngreso.Year, FechaIngreso.Month, FechaIngreso.Day, horaInt, minutoInt, 0);
+
+            // Toma el nombre del VIP si existe, o el texto introducido manualmente
+            var nombreFinal = !string.IsNullOrWhiteSpace(NombreCliente) ? NombreCliente : BusquedaCliente;
+
+            var nuevoIngreso = new SharePointIngreso
+            {
+                Title = nombreFinal,
+                ClienteId = CurrentClientId, // Lookup ID (Opcional)
+                PaqueteId = PaqueteId,       // Lookup ID (Obligatorio)
+                Dato_Ingreso = fechaCompleta,
+                Modo_Pago = MetodoPago,
+                Duplica = DuplicaTiempo ? "Si" : "No", // Elección texto
+                Descuento = Descuento, // string choice
+                Nombre_Texto = nombreFinal,
+                Genero = Genero,
+                Edad = string.IsNullOrWhiteSpace(Edad) ? "00" : Edad,
+                Mes_Cumpleanios = MesCumpleanios,
+                Total_Ingreso = TotalPagar
+            };
+
+            if (editId.HasValue)
+            {
+                var exitoso = await SharePointService.UpdateIngresoAsync(editId.Value, nuevoIngreso);
+                if (exitoso)
+                {
+                    ResultMessage = $"¡Actualización Exitosa del Registro #{editId.Value}!";
+                    NavigationManager.NavigateTo("/consulta"); // Volver a la consulta limpia
+                }
+                else
+                {
+                    ResultMessage = "No se pudo actualizar en SharePoint. Verifique la conexión.";
+                }
+            }
+            else
+            {
+                var idCreado = await SharePointService.SaveIngresoAsync(nuevoIngreso);
+                if (idCreado.HasValue)
+                {
+                    ResultMessage = $"¡Registro Exitoso! ID en SharePoint: {idCreado.Value}";
+                    ResetearFormulario();
+                    // Actualizamos las sumatorias y el gráfico de forma limpia
+                    IsLoadingChart = true;
+                    StateHasChanged();
+                    ResumenDiario = await SharePointService.GetResumenDiarioAsync(DateTime.Today);
+                    DatosDashboard = await SharePointService.ObtenerDatosComportamiento(DateTime.Today);
+                    IsLoadingChart = false;
+                }
+                else
+                {
+                    ResultMessage = "No se pudo guardar en SharePoint. Verifique la conexión.";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ResultMessage = "Error al procesar registro: " + ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void CargarFrecuente(string codigo, string nombre, string gen, int edd, string mes, int? spId = null)
+    {
+        BusquedaCliente = codigo;
+        NombreCliente = nombre;
+        Genero = gen;
+        Edad = edd.ToString("00");
+        MesCumpleanios = mes;
+        CurrentClientId = spId;
+        ClienteVIPSeleccionado = true; // Marca que viene del catálogo VIP
+    }
+
+    private void BuscarPorCodigo()
+    {
+        SharePointClient? encontrado = null;
+        var busquedaTrimeada = BusquedaCliente.Trim();
+
+        // Si la búsqueda es estrictamente numérica, intentamos buscar primero por ID
+        if (int.TryParse(busquedaTrimeada, out int idBuscado))
+        {
+            encontrado = ClientesVIP.FirstOrDefault(c => c.Id == idBuscado);
+        }
+
+        // Si no se encontró por ID (o no era numérico), buscamos por texto en Nombre o Title
+        if (encontrado == null)
+        {
+            encontrado = ClientesVIP.FirstOrDefault(c =>
+                c.Nombre?.Contains(busquedaTrimeada, StringComparison.OrdinalIgnoreCase) == true ||
+                c.Title?.Equals(busquedaTrimeada, StringComparison.OrdinalIgnoreCase) == true);
+        }
+
+        if (encontrado != null)
+        {
+            CargarFrecuente(encontrado.Title ?? "", encontrado.Nombre ?? "", encontrado.Genero ?? "", encontrado.Edad, encontrado.MesCumpleanios ?? "", encontrado.Id);
+        }
+        else
+        {
+            ClienteVIPSeleccionado = false;
+            NombreCliente = "";
+            CurrentClientId = null;
+        }
+    }
+
+    private void OnPaqueteChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int pId))
+        {
+            PaqueteId = pId;
+            RecalcularTotales();
+        }
+    }
+
+    private void OnDescuentoChanged(ChangeEventArgs e)
+    {
+        Descuento = e.Value?.ToString() ?? "0";
+        RecalcularTotales();
+    }
+
+    private void FormatearEdad()
+    {
+        if (int.TryParse(Edad, out int e))
+        {
+            // Forzamos el formato a 2 dígitos y un máximo de 99
+            Edad = Math.Clamp(e, 0, 99).ToString("00");
+        }
+    }
+
+    private void RecalcularTotales()
+    {
+        // 1. Obtener Subtotal base del paquete seleccionado
+        var paqueteSel = PaquetesDisponibles.FirstOrDefault(p => p.Id == PaqueteId);
+        Subtotal = paqueteSel != null ? paqueteSel.Precio : 0.00;
+
+        // 2. Aplicar descuento matemáticamente
+        DescuentoMonto = 0.00;
+        if (int.TryParse(Descuento, out int descPorcentaje) && descPorcentaje > 0)
+        {
+            DescuentoMonto = Subtotal * (descPorcentaje / 100.0);
+        }
+        
+        var montoTrasDescuento = Subtotal - DescuentoMonto;
+
+        // 3. Aplicar ITBMS (Valor_ITBMS = Base_Paquete * Valor_Lista_110)
+        ImpuestoItbmsCalculado = Subtotal * (PorcentajeItbms / 100.0);
+
+        // 4. Sumar el Total a Pagar
+        TotalPagar = montoTrasDescuento + ImpuestoItbmsCalculado;
+    }
+
+    private void ResetearFormulario()
+    {
+        // 1. Datos del Cliente
+        BusquedaCliente = "";
+        NombreCliente = "";
+        Genero = "";
+        Edad = "";
+        MesCumpleanios = "";
+        CurrentClientId = null;
+        ClienteVIPSeleccionado = false; // Desbloquea los campos demográficos
+        
+        // 2. Tiempos
+        FechaIngreso = DateTime.Today;
+        HoraIngreso = DateTime.Now.ToString("HH");
+        MinutoIngreso = (Math.Round(DateTime.Now.Minute / 5.0) * 5).ToString("00");
+        
+        // 3. Paquetes y Pago
+        PaqueteId = 0;
+        DuplicaTiempo = false;
+        Descuento = "0";
+        MetodoPago = "";
+        
+        // 4. Finanzas
+        Subtotal = 0.00;
+        ImpuestoItbmsCalculado = 0.00;
+        TotalPagar = 0.00;
+        DescuentoMonto = 0.00;
+    }
+
+    private void ConfigurarGrafico()
+    {
+        chartOptions = new ApexChartOptions<ComportamientoPorHora>
+        {
+            Chart = new Chart { Toolbar = new Toolbar { Show = false }, Zoom = new Zoom { Enabled = false } },
+            Stroke = new Stroke { Curve = Curve.Smooth, Width = 2 },
+            DataLabels = new DataLabels { Enabled = false },
+            Yaxis = new List<YAxis>
+            {
+                // Eje Y Primario (Izquierda) para Niños (Barras)
+                new YAxis
+                {
+                    SeriesName = "Niños",
+                    Min = 0,
+                    DecimalsInFloat = 0, // No hay medios niños
+                    Title = new AxisTitle { Text = "Cant. Entradas" }
+                },
+                // Eje Y Secundario (Derecha) para Ingresos (Línea/Área)
+                new YAxis
+                {
+                    SeriesName = "Ingresos ($)",
+                    Min = 0,
+                    Opposite = true,
+                    Labels = new YAxisLabels
+                    {
+                        Formatter = @"function (value) { return '$' + value.toFixed(2); }"
+                    },
+                    Title = new AxisTitle { Text = "Recaudo USD" }
+                }
+            },
+            Tooltip = new Tooltip
+            {
+                Shared = true,
+                Intersect = false,
+                Y = new TooltipY 
+                {
+                    Formatter = @"function (value, opts) { 
+                        if (opts.seriesIndex === 0) return value + ' niños'; 
+                        return '$' + value.toFixed(2); 
+                    }"
+                }
+            },
+            Grid = new Grid { BorderColor = "#f1f1f1", StrokeDashArray = 4 }
+        };
+    }
+}

@@ -1,0 +1,11 @@
+  Determinando los proyectos que se van a restaurar...
+  Todos los proyectos están actualizados para la restauración.
+C:\Users\orion\OneDrive - Daravina\Documents\000_Desarrollos\00_Produccion\100_Amylandia\AmylandiaWeb\Services\GraphSharePointService.cs(139,31): error CS7036: No se ha dado ningún argumento que corresponda al parámetro requerido "selectFields" de "GraphSharePointService.GetListItemsAsync(string, string)" [C:\Users\orion\OneDrive - Daravina\Documents\000_Desarrollos\00_Produccion\100_Amylandia\AmylandiaWeb\AmylandiaWeb.csproj]
+
+ERROR al compilar.
+
+C:\Users\orion\OneDrive - Daravina\Documents\000_Desarrollos\00_Produccion\100_Amylandia\AmylandiaWeb\Services\GraphSharePointService.cs(139,31): error CS7036: No se ha dado ningún argumento que corresponda al parámetro requerido "selectFields" de "GraphSharePointService.GetListItemsAsync(string, string)" [C:\Users\orion\OneDrive - Daravina\Documents\000_Desarrollos\00_Produccion\100_Amylandia\AmylandiaWeb\AmylandiaWeb.csproj]
+    0 Advertencia(s)
+    1 Errores
+
+Tiempo transcurrido 00:00:01.18

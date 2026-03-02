@@ -1,0 +1,238 @@
+@page "/consulta"
+@using AmylandiaWeb.Models
+@using AmylandiaWeb.Services
+@using System.Timers
+@inject GraphSharePointService graphService
+@inject NavigationManager navManager
+@implements IDisposable
+
+<div class="container-fluid py-4" style="background-color: #F8FAFC; min-height: 100vh;">
+    <!-- Encabezado y Filtros -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-5">
+            <h4 class="fw-bold mb-1" style="color: #1E293B;"><i class="bi bi-clock-history me-2 text-primary"></i>Monitor de Estancias</h4>
+            <p class="text-muted small mb-0">Control en tiempo real de ingresos y salidas del parque.</p>
+        </div>
+        
+        <div class="col-md-3">
+             <div class="form-floating">
+                <input type="date" class="form-control" id="fechaFiltro" @bind="FechaFiltro" @bind:after="CargarDatos" max="@DateTime.Today.ToString("yyyy-MM-dd")" style="border-radius: 12px; border: 1px solid #E2E8F0;" />
+                <label for="fechaFiltro" class="text-muted"><i class="bi bi-calendar3 me-2"></i>Fecha Consulta</label>
+            </div>
+        </div>
+
+        <div class="col-md-4 text-end">
+             <div class="btn-group shadow-sm" role="group" aria-label="Filtro de Estado">
+                <button type="button" class="btn @(FiltroActual == "Todos" ? "btn-primary" : "btn-light border") px-3" @onclick='() => CambiarFiltro("Todos")'>Todos</button>
+                <button type="button" class="btn @(FiltroActual == "Vigentes" ? "btn-primary" : "btn-light border") px-3" @onclick='() => CambiarFiltro("Vigentes")'>Vigentes</button>
+                <button type="button" class="btn @(FiltroActual == "Vencidos" ? "btn-danger" : "btn-light border") px-3" @onclick='() => CambiarFiltro("Vencidos")'>Vencidos</button>
+            </div>
+        </div>
+    </div>
+
+    @if (IsLoading)
+    {
+        <div class="d-flex justify-content-center align-items-center" style="height: 400px;">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+        </div>
+    }
+    else if (!RegistrosFiltrados.Any())
+    {
+        <div class="card shadow-sm border-0 text-center py-5" style="border-radius: 16px;">
+            <i class="bi bi-calendar-x text-muted mb-3" style="font-size: 3rem;"></i>
+            <h5 class="text-muted">No hay ingresos registrados en esta fecha con el filtro actual.</h5>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm border-0" style="border-radius: 16px; overflow: hidden;">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead style="background-color: #F1F5F9; color: #475569;">
+                        <tr>
+                            <th class="py-3 px-4 fw-semibold border-0">Cliente</th>
+                            <th class="py-3 px-3 fw-semibold border-0 text-center">Entrada</th>
+                            <th class="py-3 px-3 fw-semibold border-0 text-center">Salida Proyectada</th>
+                            <th class="py-3 px-3 fw-semibold border-0 text-center">Transacción</th>
+                            <th class="py-3 px-3 fw-semibold border-0 text-center">Paquete</th>
+                            <th class="py-3 px-4 fw-semibold border-0 w-25">Progreso de Estancia</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-top-0">
+                        @foreach (var ingreso in RegistrosFiltrados)
+                        {
+                            var esVencido = ingreso.Estado == "Vencido";
+                            var alertClass = esVencido ? "table-danger-subtle" : "";
+
+                            <tr class="@alertClass" style="cursor: pointer;" @onclick="() => AbrirRegistro(ingreso)">
+                                <!-- Cliente Info -->
+                                <td class="px-4 py-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white me-3" 
+                                             style="width: 40px; height: 40px; background-color: @(ingreso.Genero == "Femenino" ? "#F472B6" : "#38BDF8");">
+                                            <i class="bi @(ingreso.Genero == "Femenino" ? "bi-gender-female" : "bi-gender-male")"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-bold" style="color: #334155;">@ingreso.Nombre</h6>
+                                            <small class="text-muted">ID: @ingreso.Id</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <!-- Tiempos -->
+                                <td class="px-3 py-3 text-center">
+                                    <span class="badge bg-light text-dark border p-2" style="font-size: 0.9rem;">
+                                        <i class="bi bi-box-arrow-in-right text-success me-1"></i> @ingreso.HoraEntrada.ToString("hh:mm tt")
+                                    </span>
+                                </td>
+                                
+                                <td class="px-3 py-3 text-center">
+                                     <span class="badge bg-light text-dark border p-2" style="font-size: 0.9rem;">
+                                        <i class="bi bi-flag-fill text-danger me-1"></i> @ingreso.HoraSalida.ToString("hh:mm tt")
+                                    </span>
+                                </td>
+
+                                <!-- Transacción (Pago / Monto) -->
+                                <td class="px-3 py-3 text-center">
+                                    <div class="d-flex flex-column align-items-center">
+                                        <span class="fw-bold" style="color: #0F172A;">$@ingreso.TotalIngreso.ToString("F2")</span>
+                                        <small class="text-muted"><i class="bi bi-wallet2 me-1"></i>@(!string.IsNullOrEmpty(ingreso.ModoPago) ? ingreso.ModoPago : "N/D")</small>
+                                    </div>
+                                </td>
+
+                                <!-- Paquete -->
+                                <td class="px-3 py-3 text-center">
+                                    <div class="d-flex flex-column align-items-center">
+                                        <span class="badge bg-secondary mb-1">@ingreso.PaqueteNombre</span>
+                                        @if (ingreso.EsDuplica)
+                                        {
+                                            <span class="badge bg-warning text-dark" style="font-size: 0.7rem;"><i class="bi bi-x-circle-fill me-1"></i>Duplica 2X</span>
+                                        }
+                                    </div>
+                                </td>
+
+                                <!-- Progreso Visual -->
+                                <td class="px-4 py-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <small class="fw-bold @(esVencido ? "text-danger" : $"text-{ingreso.ColorSemaforo}")">
+                                            @(esVencido ? "¡TIEMPO AGOTADO!" : "EN CURSO")
+                                        </small>
+                                        <small class="text-muted fw-bold">
+                                            @(esVencido ? "" : $"{Math.Max(0, Math.Round(ingreso.MinutosRestantes))} min rest. | ")@Math.Round(ingreso.PorcentajeAvance)%
+                                        </small>
+                                    </div>
+                                    <div class="progress mb-2" style="height: 10px; border-radius: 5px;">
+                                        <div class="progress-bar progress-bar-striped bg-@ingreso.ColorSemaforo @(esVencido ? "" : "progress-bar-animated")" 
+                                             role="progressbar" 
+                                             style="width: @ingreso.PorcentajeAvance.ToString("F0").Replace(",",".")%;" 
+                                             aria-valuenow="@ingreso.PorcentajeAvance" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    @if (ingreso.EsTiempoLibre && !ingreso.SalioManualmente)
+                                    {
+                                        <div class="form-check form-switch mt-1 ms-1" @onclick:stopPropagation="true">
+                                            <input class="form-check-input" type="checkbox" id="chk_@ingreso.Id" @onchange="@((ChangeEventArgs e) => MarcarSalidaManual(ingreso.Id, e.Value))" style="cursor: pointer;">
+                                            <label class="form-check-label text-muted" for="chk_@ingreso.Id" style="font-size: 0.8rem;">Marcar Salida</label>
+                                        </div>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <small class="text-muted d-block mt-3 text-end"><i class="bi bi-arrow-repeat me-1"></i>Actualizado dinámicamente cada 60s.</small>
+    }
+</div>
+
+@code {
+    private bool IsLoading = true;
+    private DateTime FechaFiltro = DateTime.Today;
+    private string FiltroActual = "Vigentes"; // Por defecto ver los que están jugando
+    private List<IngresoMonitor> RegistrosTotales = new();
+    private List<IngresoMonitor> RegistrosFiltrados => FiltrarRegistros();
+    private HashSet<int> IdsSalidaManual = new(); // Almacenar el registro en sesion para evitar perdida en refresco
+    
+    // Timer para Live Reload (Cálculo de semáforo local)
+    private Timer? autoRefreshTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+
+        // Configurar Timer para actualizar UI cada 60 seg
+        autoRefreshTimer = new Timer(60000);
+        autoRefreshTimer.Elapsed += (sender, e) =>
+        {
+            InvokeAsync(() =>
+            {
+                // Solo re-renderiza para recalcular propiedades dinámicas como Estado y Porcentaje
+                StateHasChanged();
+            });
+        };
+        autoRefreshTimer.Start();
+    }
+
+    private async Task CargarDatos()
+    {
+        IsLoading = true;
+        
+        try
+        {
+            RegistrosTotales = await graphService.GetMonitoreoIngresosAsync(FechaFiltro);
+            foreach (var r in RegistrosTotales)
+            {
+                if (IdsSalidaManual.Contains(r.Id))
+                {
+                    r.SalioManualmente = true;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error Consulta: {ex.Message}");
+        }
+
+        IsLoading = false;
+    }
+
+    private List<IngresoMonitor> FiltrarRegistros()
+    {
+        if (RegistrosTotales == null) return new List<IngresoMonitor>();
+
+        if (FiltroActual == "Vigentes")
+            return RegistrosTotales.Where(r => r.Estado == "Vigente").ToList();
+        
+        if (FiltroActual == "Vencidos")
+            return RegistrosTotales.Where(r => r.Estado == "Vencido").ToList();
+
+        return RegistrosTotales; // "Todos"
+    }
+
+    private void CambiarFiltro(string nuevoFiltro)
+    {
+        FiltroActual = nuevoFiltro;
+    }
+
+    private void AbrirRegistro(IngresoMonitor ingreso)
+    {
+        // Enviar al Home.razor por querystring para su edición
+        navManager.NavigateTo($"/?editId={ingreso.Id}");
+    }
+
+    private void MarcarSalidaManual(int id, object? isChecked)
+    {
+        if (isChecked is bool b && b)
+        {
+            IdsSalidaManual.Add(id);
+            var item = RegistrosTotales.FirstOrDefault(x => x.Id == id);
+            if (item != null) item.SalioManualmente = true;
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        autoRefreshTimer?.Dispose();
+    }
+}

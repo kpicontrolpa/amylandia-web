@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Denegado - Amylandia</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            border-top: 6px solid #dc3545;
+        }
+
+        h1 {
+            color: #dc3545;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-margin: 1.5;
+            color: #6c757d;
+        }
+
+        .btn-home {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4C1D95;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .btn-home:hover {
+            background-color: #3b1473;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>403 - Acceso Denegado</h1>
+        <p>Has ingresado al sistema de Amylandia, pero tu cuenta (<strong>@daravina.com</strong>) no tiene asignado un
+            rol de seguridad válido.</p>
+        <p>Por favor, contacta con el administrador del sistema para que autorice tu acceso en la lista
+            <strong>108_Bd_Personal</strong>.</p>
+        <a href="https://login.microsoftonline.com/ab449da1-2b00-4ba9-aad1-772b5a4dca06/oauth2/v2.0/logout"
+            class="btn-home">Cerrar Sesión</a>
+    </div>
+</body>
+
+</html>

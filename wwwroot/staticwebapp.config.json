@@ -1,0 +1,54 @@
+{
+    "auth": {
+        "identityProviders": {
+            "azureActiveDirectory": {
+                "registration": {
+                    "openIdConnectConfiguration": {
+                        "wellKnownConfigUrl": "https://login.microsoftonline.com/ab449da1-2b00-4ba9-aad1-772b5a4dca06/v2.0/.well-known/openid-configuration"
+                    },
+                    "clientIdSettingName": "AAD_CLIENT_ID",
+                    "clientSecretSettingName": "AAD_CLIENT_SECRET"
+                },
+                "login": {
+                    "loginParameters": [
+                        "resource=https://graph.microsoft.com"
+                    ]
+                }
+            }
+        }
+    },
+    "routes": [
+        {
+            "route": "/admin/*",
+            "allowedRoles": [
+                "Acceso_Adm"
+            ]
+        },
+        {
+            "route": "/_framework/*",
+            "allowedRoles": [
+                "Acceso_Adm",
+                "Acceso_Editor",
+                "Acceso_Lector"
+            ]
+        },
+        {
+            "route": "/*",
+            "allowedRoles": [
+                "Acceso_Adm",
+                "Acceso_Editor",
+                "Acceso_Lector"
+            ]
+        }
+    ],
+    "responseOverrides": {
+        "401": {
+            "redirect": "/.auth/login/aad",
+            "statusCode": 302
+        },
+        "403": {
+            "rewrite": "/403.html",
+            "statusCode": 403
+        }
+    }
+}

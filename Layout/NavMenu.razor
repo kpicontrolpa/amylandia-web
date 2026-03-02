@@ -1,0 +1,123 @@
+﻿<div class="top-row ps-3 navbar navbar-dark" style="background-color: rgba(0,0,0,0.1) !important;">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href=""><i class="bi bi-box-seam me-2"></i>Amylandia PRO</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <nav class="flex-column pb-4 mt-3">
+        <!-- BLOQUE 1: REGISTRO DIARIO -->
+        <div class="nav-item px-3 mb-2">
+            <a class="nav-link fw-bold d-flex align-items-center" @onclick='() => ToggleMenu("registro")' style="cursor: pointer;">
+                <i class="bi bi-journal-richtext fs-3 me-3 text-light" style="opacity: 0.9;"></i>
+                <div class="d-flex justify-content-between w-100 align-items-center">
+                    <span style="font-size: 0.95rem;">Registro Diario</span>
+                    <i class="bi bi-chevron-@(activeMenu == "registro" ? "up" : "down") small" style="opacity: 0.6;"></i>
+                </div>
+            </a>
+            <div class="collapse @(activeMenu == "registro" ? "show" : "")">
+                <nav class="nav flex-column ms-5 pt-2 border-start border-light ps-3 mb-3" style="--bs-border-opacity: .2;">
+                    <NavLink class="nav-link py-1 text-light mb-2 text-nowrap" style="opacity: 0.85; font-size: 0.9rem; padding-left: 0;" href="" Match="NavLinkMatch.All">
+                         a) Ingreso al Parque
+                    </NavLink>
+                    <NavLink class="nav-link py-1 text-light mb-1 text-nowrap" style="opacity: 0.85; font-size: 0.9rem; padding-left: 0;" href="consulta">
+                         b) Consulta
+                    </NavLink>
+                </nav>
+            </div>
+        </div>
+
+        <hr class="text-light mx-4 my-2" style="opacity:0.1;" />
+
+        <!-- BLOQUE 2: VENTAS -->
+        <div class="nav-item px-3 mb-2">
+            <a class="nav-link fw-bold d-flex align-items-center" @onclick='() => ToggleMenu("ventas")' style="cursor: pointer;">
+                <i class="bi bi-shop fs-3 me-3 text-light" style="opacity: 0.9;"></i>
+                <div class="d-flex justify-content-between w-100 align-items-center">
+                    <span style="font-size: 0.95rem;">Ventas</span>
+                    <i class="bi bi-chevron-@(activeMenu == "ventas" ? "up" : "down") small" style="opacity: 0.6;"></i>
+                </div>
+            </a>
+            <div class="collapse @(activeMenu == "ventas" ? "show" : "")">
+                <nav class="nav flex-column ms-5 pt-2 border-start border-light ps-3 mb-3" style="--bs-border-opacity: .2;">
+                    <NavLink class="nav-link py-1 text-light mb-2 text-nowrap" style="opacity: 0.85; font-size: 0.9rem; padding-left: 0;" href="ventas/registro">
+                         a) Registro
+                    </NavLink>
+                    <NavLink class="nav-link py-1 text-light mb-1 text-nowrap" style="opacity: 0.85; font-size: 0.9rem; padding-left: 0;" href="ventas/consulta">
+                         b) Consulta
+                    </NavLink>
+                </nav>
+            </div>
+        </div>
+
+        <hr class="text-light mx-4 my-2" style="opacity:0.1;" />
+
+        <!-- BLOQUE 3: GASTOS -->
+        <div class="nav-item px-3 mb-2">
+            <a class="nav-link fw-bold d-flex align-items-center" @onclick='() => ToggleMenu("gastos")' style="cursor: pointer;">
+                <i class="bi bi-wallet2 fs-3 me-3 text-light" style="opacity: 0.9;"></i>
+                <div class="d-flex justify-content-between w-100 align-items-center">
+                    <span style="font-size: 0.95rem;">Gastos</span>
+                    <i class="bi bi-chevron-@(activeMenu == "gastos" ? "up" : "down") small" style="opacity: 0.6;"></i>
+                </div>
+            </a>
+            <div class="collapse @(activeMenu == "gastos" ? "show" : "")">
+                <nav class="nav flex-column ms-5 pt-2 border-start border-light ps-3 mb-3" style="--bs-border-opacity: .2;">
+                    <NavLink class="nav-link py-1 text-light mb-2 text-nowrap" style="opacity: 0.85; font-size: 0.9rem; padding-left: 0;" href="gastos/registro">
+                         a) Registro
+                    </NavLink>
+                    <NavLink class="nav-link py-1 text-light mb-1 text-nowrap" style="opacity: 0.85; font-size: 0.9rem; padding-left: 0;" href="gastos/consulta">
+                         b) Consulta
+                    </NavLink>
+                </nav>
+            </div>
+        </div>
+
+        <hr class="text-light mx-4 my-2" style="opacity:0.1;" />
+
+        <!-- BLOQUE 4: CLIENTE FRECUENTE -->
+        <div class="nav-item px-3 mb-2">
+            <a class="nav-link fw-bold d-flex align-items-center" @onclick='() => ToggleMenu("clientes")' style="cursor: pointer;">
+                <i class="bi bi-person-vcard fs-3 me-3 text-light" style="opacity: 0.9;"></i>
+                <div class="d-flex justify-content-between w-100 align-items-center">
+                    <span style="font-size: 0.95rem;">Cliente Frecuente</span>
+                    <i class="bi bi-chevron-@(activeMenu == "clientes" ? "up" : "down") small" style="opacity: 0.6;"></i>
+                </div>
+            </a>
+            <div class="collapse @(activeMenu == "clientes" ? "show" : "")">
+                <nav class="nav flex-column ms-5 pt-2 border-start border-light ps-3 mb-3" style="--bs-border-opacity: .2;">
+                    <NavLink class="nav-link py-1 text-light mb-2 text-nowrap" style="opacity: 0.85; font-size: 0.9rem; padding-left: 0;" href="clientes/registro">
+                         a) Registro
+                    </NavLink>
+                    <NavLink class="nav-link py-1 text-light mb-1 text-nowrap" style="opacity: 0.85; font-size: 0.9rem; padding-left: 0;" href="clientes/consulta">
+                         b) Consulta
+                    </NavLink>
+                </nav>
+            </div>
+        </div>
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+    private string activeMenu = "";
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    private void ToggleMenu(string menuName)
+    {
+        // Si el menú clickeado ya está activo, lo cerramos. Si no, lo abrimos (y automáticamente cierra el resto)
+        if (activeMenu == menuName)
+            activeMenu = "";
+        else
+            activeMenu = menuName;
+    }
+}

@@ -1,0 +1,13 @@
+  Determinando los proyectos que se van a restaurar...
+  Todos los proyectos están actualizados para la restauración.
+C:\Users\orion\OneDrive - Daravina\Documents\000_Desarrollos\00_Produccion\100_Amylandia\AmylandiaWeb\Pages\Home.razor(290,57): error CS0266: No se puede convertir implícitamente el tipo 'double' en 'decimal?'. Ya existe una conversión explícita (compruebe si le falta una conversión) [C:\Users\orion\OneDrive - Daravina\Documents\000_Desarrollos\00_Produccion\100_Amylandia\AmylandiaWeb\AmylandiaWeb.csproj]
+C:\Users\orion\OneDrive - Daravina\Documents\000_Desarrollos\00_Produccion\100_Amylandia\AmylandiaWeb\Pages\Home.razor(290,57): error CS1662: No se puede convertir expresión lambda en el tipo delegado indicado porque algunos de los tipos de valores devueltos del bloque no se pueden convertir implícitamente en el tipo de valor devuelto del delegado [C:\Users\orion\OneDrive - Daravina\Documents\000_Desarrollos\00_Produccion\100_Amylandia\AmylandiaWeb\AmylandiaWeb.csproj]
+
+ERROR al compilar.
+
+C:\Users\orion\OneDrive - Daravina\Documents\000_Desarrollos\00_Produccion\100_Amylandia\AmylandiaWeb\Pages\Home.razor(290,57): error CS0266: No se puede convertir implícitamente el tipo 'double' en 'decimal?'. Ya existe una conversión explícita (compruebe si le falta una conversión) [C:\Users\orion\OneDrive - Daravina\Documents\000_Desarrollos\00_Produccion\100_Amylandia\AmylandiaWeb\AmylandiaWeb.csproj]
+C:\Users\orion\OneDrive - Daravina\Documents\000_Desarrollos\00_Produccion\100_Amylandia\AmylandiaWeb\Pages\Home.razor(290,57): error CS1662: No se puede convertir expresión lambda en el tipo delegado indicado porque algunos de los tipos de valores devueltos del bloque no se pueden convertir implícitamente en el tipo de valor devuelto del delegado [C:\Users\orion\OneDrive - Daravina\Documents\000_Desarrollos\00_Produccion\100_Amylandia\AmylandiaWeb\AmylandiaWeb.csproj]
+    0 Advertencia(s)
+    2 Errores
+
+Tiempo transcurrido 00:00:01.10

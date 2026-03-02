@@ -1,0 +1,18 @@
+﻿@inherits LayoutComponentBase
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <!-- Header Móvil únicamente -->
+        <div class="top-row px-4 d-md-none fw-bold" style="color: var(--amy-primary)">
+            Amylandia PRO
+        </div>
+
+        <article class="content w-100 mx-auto" style="max-width: 1200px;">
+            @Body
+        </article>
+    </main>
+</div>

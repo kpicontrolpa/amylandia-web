@@ -1,0 +1,100 @@
+/* Layout adaptativo 3 columnas / 1 columna */
+.page {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.sidebar {
+    background-color: var(--amy-primary);
+    color: white;
+}
+
+.top-row {
+    background-color: var(--amy-card-bg);
+    border-bottom: 1px solid #d6d5d5;
+    justify-content: space-between;
+    height: 3.5rem;
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+}
+
+@media (min-width: 641px) {
+    .page {
+        flex-direction: row;
+    }
+
+    .sidebar {
+        width: 250px;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+    }
+
+    main {
+        flex-direction: row;
+        /* Layout dual (Form + Live Status) */
+        overflow: hidden;
+        padding: 1.5rem;
+        background-color: var(--amy-bg);
+    }
+
+    /* Area Formulario (Izquierda) */
+    article.content {
+        flex: 2;
+        /* 66% width */
+        background: var(--amy-card-bg);
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-right: 1.5rem;
+        overflow-y: auto;
+    }
+
+    /* Area Activos (Derecha) */
+    .status-panel-placeholder {
+        flex: 1;
+        /* 33% width */
+        background: var(--amy-card-bg);
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        overflow-y: auto;
+    }
+
+    .top-row {
+        display: none;
+        /* Ocultar TopRow en Desktop porque tenemos el menu lateral fijo */
+    }
+}
+
+@media (max-width: 640.98px) {
+    main {
+        background-color: var(--amy-bg);
+    }
+
+    article.content {
+        background: var(--amy-card-bg);
+        margin: 1rem;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .status-panel-placeholder {
+        background: var(--amy-card-bg);
+        margin: 0 1rem 1rem 1rem;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+}
