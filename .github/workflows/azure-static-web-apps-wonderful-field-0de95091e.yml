@@ -14,24 +14,64 @@ jobs:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
+
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
           lfs: false
-      - name: Build And Deploy
-        id: builddeploy
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      # Encuentra automáticamente el primer .csproj (para que no dependas de la ruta exacta)
+      - name: Locate project (.csproj)
+        shell: bash
+        run: |
+          set -e
+          CSPROJ="$(find . -maxdepth 6 -name '*.csproj' | head -n 1)"
+          if [ -z "$CSPROJ" ]; then
+            echo "ERROR: No se encontró ningún .csproj en el repo."
+            exit 1
+          fi
+          echo "CSPROJ=$CSPROJ" >> $GITHUB_ENV
+          echo "PROJECT_DIR=$(dirname "$CSPROJ")" >> $GITHUB_ENV
+          echo "Proyecto detectado: $CSPROJ"
+
+      - name: Restore + Publish (Release)
+        shell: bash
+        run: |
+          set -e
+          dotnet restore "$CSPROJ"
+          dotnet publish "$CSPROJ" -c Release -o ./published
+
+          # Asegura que el staticwebapp.config.json quede en el artefacto publicado
+          # (SWA lo lee desde la raíz del contenido publicado)
+          if [ -f "./staticwebapp.config.json" ]; then
+            cp "./staticwebapp.config.json" "./published/wwwroot/staticwebapp.config.json"
+          fi
+          if [ -f "$PROJECT_DIR/wwwroot/staticwebapp.config.json" ]; then
+            cp "$PROJECT_DIR/wwwroot/staticwebapp.config.json" "./published/wwwroot/staticwebapp.config.json"
+          fi
+
+          echo "Contenido publicado:"
+          ls -la ./published
+          echo "Contenido wwwroot:"
+          ls -la ./published/wwwroot
+
+      - name: Deploy to Azure Static Web Apps
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_WONDERFUL_FIELD_0DE95091E }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
-          # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: "/" # App source code path
-          api_location: "" # Api source code path - optional
-          output_location: "wwwroot" # Built app content directory - optional
-          ###### End of Repository/Build Configurations ######
+          skip_app_build: true
+          skip_api_build: true
+          app_location: "./published"
+          output_location: "wwwroot"
+          api_location: ""
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
@@ -39,11 +79,11 @@ jobs:
     name: Close Pull Request Job
     steps:
       - name: Close Pull Request
-        id: closepullrequest
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_WONDERFUL_FIELD_0DE95091E }}
           action: "close"
+
 
 
 
