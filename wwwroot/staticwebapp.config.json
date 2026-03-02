@@ -1,5 +1,6 @@
 {
     "auth": {
+        "rolesSource": "custom",
         "identityProviders": {
             "azureActiveDirectory": {
                 "registration": {
@@ -25,19 +26,22 @@
             ]
         },
         {
-            "route": "/_framework/*",
+            "route": "/transacciones/*",
             "allowedRoles": [
                 "Acceso_Adm",
-                "Acceso_Editor",
-                "Acceso_Lector"
+                "Acceso_Editor"
+            ]
+        },
+        {
+            "route": "/_framework/*",
+            "allowedRoles": [
+                "authenticated"
             ]
         },
         {
             "route": "/*",
             "allowedRoles": [
-                "Acceso_Adm",
-                "Acceso_Editor",
-                "Acceso_Lector"
+                "authenticated"
             ]
         }
     ],
