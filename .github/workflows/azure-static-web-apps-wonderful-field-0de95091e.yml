@@ -43,41 +43,16 @@ jobs:
           echo "PROJECT_DIR=$(dirname "$CSPROJ")" >> $GITHUB_ENV
           echo "Proyecto detectado: $CSPROJ"
 
-      - name: Restore + Publish (Release)
-        shell: bash
-        run: |
-          set -e
-          dotnet restore "$CSPROJ"
-          dotnet publish "$CSPROJ" -c Release -o ./published
-
-          # El paso de publish genera todo dentro de published/wwwroot para Blazor WASM
-          # Aseguramos que el staticwebapp.config.json esté justo allí
-          if [ -f "$PROJECT_DIR/wwwroot/staticwebapp.config.json" ]; then
-            echo "Copiando staticwebapp.config.json desde $PROJECT_DIR/wwwroot a published/wwwroot"
-            cp "$PROJECT_DIR/wwwroot/staticwebapp.config.json" "./published/wwwroot/"
-          elif [ -f "./staticwebapp.config.json" ]; then
-            echo "Copiando staticwebapp.config.json desde raíz a published/wwwroot"
-            cp "./staticwebapp.config.json" "./published/wwwroot/"
-          fi
-
-          echo "Contenido publicado:"
-          ls -la ./published
-          echo "Contenido wwwroot:"
-          ls -la ./published/wwwroot
-          echo "Framework:"
-          ls -la ./published/wwwroot/_framework || true
-
-      - name: Deploy to Azure Static Web Apps
+      - name: Build And Deploy
+        id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_WONDERFUL_FIELD_0DE95091E }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          skip_app_build: true
-          skip_api_build: true
-          app_location: "./published/wwwroot"
-          output_location: ""
+          app_location: "/" # Raíz del repositorio donde está el .csproj
           api_location: ""
+          output_location: "wwwroot" # El .net 8 publish suelta el WASM en wwwroot
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
