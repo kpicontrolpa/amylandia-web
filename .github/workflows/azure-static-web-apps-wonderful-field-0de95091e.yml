@@ -26,16 +26,27 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      # Encuentra automáticamente el primer .csproj (para que no dependas de la ruta exacta)
       - name: Locate project (.csproj)
         shell: bash
         run: |
           set -e
-          CSPROJ="$(find . -maxdepth 6 -name '*.csproj' | head -n 1)"
+
+          # 1) Prioriza el proyecto esperado si existe
+          CSPROJ="$(find . -maxdepth 8 -type f -name 'AmylandiaWeb.csproj' -print | head -n 1)"
+
+          # 2) Si no está, toma el primer csproj ignorando bin/obj
+          if [ -z "$CSPROJ" ]; then
+            CSPROJ="$(find . -maxdepth 8 \
+              -path '*/bin/*' -prune -o \
+              -path '*/obj/*' -prune -o \
+              -type f -name '*.csproj' -print | head -n 1)"
+          fi
+
           if [ -z "$CSPROJ" ]; then
             echo "ERROR: No se encontró ningún .csproj en el repo."
             exit 1
           fi
+
           echo "CSPROJ=$CSPROJ" >> $GITHUB_ENV
           echo "PROJECT_DIR=$(dirname "$CSPROJ")" >> $GITHUB_ENV
           echo "Proyecto detectado: $CSPROJ"
@@ -48,7 +59,6 @@ jobs:
           dotnet publish "$CSPROJ" -c Release -o ./published
 
           # Asegura que el staticwebapp.config.json quede en el artefacto publicado
-          # (SWA lo lee desde la raíz del contenido publicado)
           if [ -f "./staticwebapp.config.json" ]; then
             cp "./staticwebapp.config.json" "./published/wwwroot/staticwebapp.config.json"
           fi
@@ -60,6 +70,8 @@ jobs:
           ls -la ./published
           echo "Contenido wwwroot:"
           ls -la ./published/wwwroot
+          echo "Framework:"
+          ls -la ./published/wwwroot/_framework || true
 
       - name: Deploy to Azure Static Web Apps
         uses: Azure/static-web-apps-deploy@v1
@@ -82,8 +94,8 @@ jobs:
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_WONDERFUL_FIELD_0DE95091E }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "close" # cierre de PR
-
 
 
 
